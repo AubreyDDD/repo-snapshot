@@ -24,7 +24,9 @@ exclude = "node_modules/**"
     vi.spyOn(fs, "readFileSync").mockReturnValue(mockTomlContent);
     vi.spyOn(console, "info").mockImplementation(() => {});
 
-    const result = parseTomlConfig<{ options: { include: string; exclude: string } }>();
+    const result = parseTomlConfig<{
+      options: { include: string; exclude: string };
+    }>();
 
     expect(result).toHaveProperty("options");
     expect(result.options.include).toBe("*.ts,*.js");
