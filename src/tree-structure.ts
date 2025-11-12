@@ -12,7 +12,7 @@ export interface TokenCountOptions {
 export function buildTree(
   files: string[],
   root: string,
-  tokenCountOptions?: TokenCountOptions
+  tokenCountOptions?: TokenCountOptions,
 ): string {
   if (!exists(root)) return "";
   if (isFile(root)) return path.basename(root);
@@ -62,7 +62,7 @@ function walkDirectory(
   prefix: string,
   files: string[],
   treeLines: string[],
-  tokenCountOptions?: TokenCountOptions
+  tokenCountOptions?: TokenCountOptions,
 ) {
   let entries: fs.Dirent[];
   try {
@@ -71,7 +71,9 @@ function walkDirectory(
     return;
   }
 
-  const visibleEntries = entries.filter((entry) => isVisibleEntry(entry, dir, files));
+  const visibleEntries = entries.filter((entry) =>
+    isVisibleEntry(entry, dir, files),
+  );
 
   visibleEntries.forEach((entry, index) => {
     const isLast = index === visibleEntries.length - 1;
@@ -83,7 +85,10 @@ function walkDirectory(
 
     if (entry.isFile() && tokenCountOptions?.enabled) {
       const count = getTokenCount(fullPath, tokenCountOptions);
-      if (!tokenCountOptions.threshold || count >= tokenCountOptions.threshold) {
+      if (
+        !tokenCountOptions.threshold ||
+        count >= tokenCountOptions.threshold
+      ) {
         name += ` (${count} tokens)`;
       }
     }
@@ -99,9 +104,14 @@ function walkDirectory(
 /**
  * Check whether the entry should be displayed in the tree
  */
-function isVisibleEntry(entry: fs.Dirent, dir: string, files: string[]): boolean {
+function isVisibleEntry(
+  entry: fs.Dirent,
+  dir: string,
+  files: string[],
+): boolean {
   const fullPath = path.join(dir, entry.name);
   if (entry.isFile()) return files.includes(path.resolve(fullPath));
-  if (entry.isDirectory()) return files.some(f => f.startsWith(path.resolve(fullPath)));
+  if (entry.isDirectory())
+    return files.some((f) => f.startsWith(path.resolve(fullPath)));
   return false;
 }

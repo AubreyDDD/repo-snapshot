@@ -1,6 +1,6 @@
-import { simpleGit } from "simple-git";
 import fs from "fs";
 import path from "path";
+import { simpleGit } from "simple-git";
 
 export async function getGitInfo(repoPath: string): Promise<string> {
   try {

@@ -2,13 +2,14 @@
 import fs from "fs";
 import path from "path";
 
-import { buildOutput } from "./output-builder.js";
+import { parseCLI } from "./cli.js";
 import { collectFiles } from "./file-collector.js";
 import { isRecentlyModified } from "./file-utils.js";
-import { parseCLI } from "./cli.js";
+import { buildOutput } from "./output-builder.js";
 import { parseTomlConfig } from "./toml-config.js";
 
-let { options, paths } = parseCLI();
+const { paths } = parseCLI();
+let { options } = parseCLI();
 
 if (paths.length === 0 || (paths.length === 1 && paths[0] === ".")) {
   console.info("not specified paths, using current directory.");
@@ -16,11 +17,13 @@ if (paths.length === 0 || (paths.length === 1 && paths[0] === ".")) {
   try {
     const tomlConfigOptions = parseTomlConfig();
 
-    if (Object.keys(tomlConfigOptions).length > 0) {
-      options = { ...tomlConfigOptions, ...options }; // CLI options take precedence
+    if (typeof tomlConfigOptions === "object" && tomlConfigOptions !== null) {
+      options = { ...(tomlConfigOptions as object), ...options }; // CLI options take precedence
       console.info("Using options from config:", options);
     } else {
-      console.info("No config file found, using current directory with CLI options.");
+      console.info(
+        "No config file found, using current directory with CLI options.",
+      );
     }
   } catch (error) {
     console.error("Error parsing config file!", (error as Error).message);
@@ -30,7 +33,10 @@ if (paths.length === 0 || (paths.length === 1 && paths[0] === ".")) {
 
 function parsePatterns(patterns?: string): string[] {
   if (!patterns) return [];
-  return patterns.split(",").map((p) => p.trim()).filter(Boolean);
+  return patterns
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
 }
 
 const includePatterns = parsePatterns(options.include);
@@ -46,11 +52,15 @@ async function main() {
   }
 
   // Deduping + Sorting
-  let collectedFiles = await collectFiles(absolutePaths, includePatterns, excludePatterns);
+  let collectedFiles = await collectFiles(
+    absolutePaths,
+    includePatterns,
+    excludePatterns,
+  );
 
   // Output file contents
   const skippedFiles: string[] = [];
-  let grepMatchedFiles: string[] = [];
+  const grepMatchedFiles: string[] = [];
 
   // If --grep is specified, first filter out files matching the content.
   if (options.grep) {
@@ -62,7 +72,9 @@ async function main() {
           grepMatchedFiles.push(file);
         }
       } catch (error) {
+        console.error("Error parsing config file!", (error as Error).message);
         skippedFiles.push(file);
+        process.exit(1);
       }
     }
     collectedFiles = grepMatchedFiles;
@@ -72,8 +84,10 @@ async function main() {
   let recentFilesCount = 0;
   if (options.recent) {
     // Parse the days parameter, default to 7
-    const recentDays = isNaN(options.recent) ? 7 : parseInt(options.recent, 10) || 7;
-    collectedFiles = collectedFiles.filter(file => {
+    const recentDays = isNaN(options.recent)
+      ? 7
+      : parseInt(options.recent, 10) || 7;
+    collectedFiles = collectedFiles.filter((file) => {
       const isRecent = isRecentlyModified(file, recentDays);
       if (isRecent) recentFilesCount++;
       return isRecent;
@@ -91,7 +105,7 @@ async function main() {
     options,
     rootPath,
     recentFilesCount,
-    grepMatchedFiles
+    grepMatchedFiles,
   });
 
   // Report skipped files to stderr

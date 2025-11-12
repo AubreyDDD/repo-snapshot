@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as path from "path";
+import { beforeEach, describe, expect, it, MockedFunction, vi } from "vitest";
 
 // 🧩 Global Mock fs (must be placed at the very top)
 vi.mock("fs", async () => {
@@ -40,7 +40,10 @@ describe("test function: buildOutput", () => {
 
   it("should truncate preview lines", async () => {
     const fs = await import("fs");
-    (fs.readFileSync as any).mockReturnValue("a\nb\nc\nd\n");
+    const mockReadFileSync = fs.readFileSync as MockedFunction<
+      typeof fs.readFileSync
+    >;
+    mockReadFileSync.mockReturnValue("a\nb\nc\nd\n");
 
     const { buildOutput } = await import("../src/output-builder.js");
 
@@ -61,7 +64,10 @@ describe("test function: buildOutput", () => {
 
   it("should print unreadable files as [Could not read file]", async () => {
     const fs = await import("fs");
-    (fs.readFileSync as any).mockImplementation(() => {
+    const mockReadFileSync = fs.readFileSync as MockedFunction<
+      typeof fs.readFileSync
+    >;
+    mockReadFileSync.mockImplementation(() => {
       throw new Error("fail");
     });
 
@@ -82,7 +88,10 @@ describe("test function: buildOutput", () => {
 
   it("should include grep and recent summary fields", async () => {
     const fs = await import("fs");
-    (fs.readFileSync as any).mockReturnValue("hello world");
+    const mockReadFileSync = fs.readFileSync as MockedFunction<
+      typeof fs.readFileSync
+    >;
+    mockReadFileSync.mockReturnValue("hello world");
 
     const { buildOutput } = await import("../src/output-builder.js");
 

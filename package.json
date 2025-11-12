@@ -13,7 +13,9 @@
     "build:watch": "tsc --watch",
     "start": "node dist/index.js",
     "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "coverage": "vitest run --coverage"
@@ -26,10 +28,14 @@
     "@vitest/coverage-v8": "4.0.7",
     "commander": "^14.0.0",
     "eslint": "^9.35.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "memfs": "^4.50.0",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
+    "typescript-eslint": "^8.46.4",
     "vitest": "^4.0.7"
   },
   "dependencies": {

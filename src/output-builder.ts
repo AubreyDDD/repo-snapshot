@@ -1,14 +1,23 @@
 // src/utils/outputBuilder.ts
 import fs from "fs";
 import path from "path";
-import { buildTree, TokenCountOptions } from "./tree-structure.js";
+
 import { getFileExtension } from "./file-utils.js";
 import { getGitInfo } from "./git-info.js";
+import { buildTree, TokenCountOptions } from "./tree-structure.js";
+
+interface Options {
+  preview?: string;
+  grep?: string;
+  recent?: string | number | boolean;
+  tokenCountTree?: number | boolean;
+  output?: string;
+}
 
 interface OutputOptions {
   absolutePaths: string[];
   collectedFiles: string[];
-  options: any;
+  options: Options;
   rootPath: string;
   recentFilesCount: number;
   grepMatchedFiles: string[];
@@ -35,9 +44,21 @@ export async function buildOutput({
   addTreeStructure(lines, collectedFiles, rootPath, options);
 
   // Obtain the valid line count returned by addFileContents
-  const totalLines = await addFileContents(lines, collectedFiles, absolutePaths[0], options);
+  const totalLines = await addFileContents(
+    lines,
+    collectedFiles,
+    absolutePaths[0],
+    options,
+  );
 
-  addSummary(lines, collectedFiles, grepMatchedFiles, options, recentFilesCount, totalLines);
+  addSummary(
+    lines,
+    collectedFiles,
+    grepMatchedFiles,
+    options,
+    recentFilesCount,
+    totalLines,
+  );
 
   return lines.join("\n");
 }
@@ -58,13 +79,19 @@ async function addGitInfo(lines: string[], repoPath: string) {
   lines.push(gitInfo.trim(), "");
 }
 
-function addTreeStructure(lines: string[], files: string[], root: string, options: any) {
+function addTreeStructure(
+  lines: string[],
+  files: string[],
+  root: string,
+  options: Options,
+) {
   lines.push("## Structure", "");
   lines.push(path.basename(root) + "/");
 
-  const tokenOptions: TokenCountOptions = options.tokenCountTree
-    ? { enabled: true, threshold: options.tokenCountTree }
-    : { enabled: false };
+  const tokenOptions: TokenCountOptions =
+    options.tokenCountTree && typeof options.tokenCountTree === "number"
+      ? { enabled: true, threshold: options.tokenCountTree }
+      : { enabled: false };
 
   lines.push(buildTree(files, root, tokenOptions), "");
 }
@@ -73,7 +100,7 @@ async function addFileContents(
   lines: string[],
   files: string[],
   basePath: string,
-  options: any
+  options: Options,
 ): Promise<number> {
   if (files.length === 0) return 0;
 
@@ -93,7 +120,13 @@ async function addFileContents(
       totalLines += displayed.length;
     } catch {
       if (!options.grep) {
-        lines.push(`### File: ${relPath}`, "[Could not read file]", "```", "```", "");
+        lines.push(
+          `### File: ${relPath}`,
+          "[Could not read file]",
+          "```",
+          "```",
+          "",
+        );
       }
     }
   }
@@ -101,7 +134,10 @@ async function addFileContents(
   return totalLines;
 }
 
-function getPreviewLines(content: string, previewOption: string | undefined): string[] {
+function getPreviewLines(
+  content: string,
+  previewOption: string | undefined,
+): string[] {
   const lines = content.split("\n");
   const result = [...lines];
 
@@ -117,9 +153,9 @@ function addSummary(
   lines: string[],
   files: string[],
   grepMatchedFiles: string[],
-  options: any,
+  options: Options,
   recentFilesCount: number,
-  totalLines: number
+  totalLines: number,
 ) {
   lines.push("## Summary");
 
@@ -132,7 +168,20 @@ function addSummary(
   lines.push(`- Total lines: ${totalLines}`);
 
   if (options.recent && !options.grep) {
-    const recentDays = isNaN(options.recent) ? 7 : parseInt(options.recent, 10) || 7;
+    let recentDays: number;
+
+    if (typeof options.recent === "number") {
+      recentDays = options.recent;
+    } else if (typeof options.recent === "string") {
+      recentDays = parseInt(options.recent, 10);
+      if (isNaN(recentDays)) {
+        recentDays = 7;
+      }
+    } else if (typeof options.recent === "boolean") {
+      recentDays = options.recent ? 7 : parseInt(options.recent, 10) || 7;
+    } else {
+      recentDays = 7;
+    }
     lines.push(`- Recent files (last ${recentDays} days): ${recentFilesCount}`);
   }
 }

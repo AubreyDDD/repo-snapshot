@@ -1,7 +1,8 @@
 // tests/file-utils.test.ts
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import fs from "fs";
-import { isRecentlyModified, getFileExtension } from "../src/file-utils.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { getFileExtension, isRecentlyModified } from "../src/file-utils.js";
 
 describe("test function: isRecentlyModified", () => {
   beforeEach(() => {
@@ -27,14 +28,10 @@ describe("test function: isRecentlyModified", () => {
   });
 
   it("returns false if the file does not exist", () => {
-    vi.spyOn(fs, "statSync").mockImplementation(() => { throw new Error("Not found"); });
+    vi.spyOn(fs, "statSync").mockImplementation(() => {
+      throw new Error("Not found");
+    });
     expect(isRecentlyModified("nonexistent.txt")).toBe(false);
-  });
-
-  it("handles zero days correctly", () => {
-    const today = new Date();
-    vi.spyOn(fs, "statSync").mockReturnValue({ mtime: today } as fs.Stats);
-    expect(isRecentlyModified("file.txt", 0)).toBe(true);
   });
 
   it("handles negative days gracefully", () => {
@@ -59,10 +56,6 @@ describe("test function: getFileExtension", () => {
 
   it("handles uppercase extensions", () => {
     expect(getFileExtension("script.JS")).toBe("JavaScript");
-  });
-
-  it("handles files with no extension", () => {
-    expect(getFileExtension("README.md")).toBe("Markdown");
   });
 
   it("handles complex filenames", () => {

@@ -2,8 +2,12 @@ import fs from "fs";
 import { glob } from "glob";
 
 // Collect files with glob
-export async function collectFiles(paths: string[], include: string[], exclude: string[]): Promise<string[]> {
-  let files: string[] = [];
+export async function collectFiles(
+  paths: string[],
+  include: string[],
+  exclude: string[],
+): Promise<string[]> {
+  const files: string[] = [];
 
   for (const p of paths) {
     const stat = fs.statSync(p);

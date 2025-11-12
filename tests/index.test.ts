@@ -1,9 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // Replicate parsePatterns for testing purposes
 function parsePatterns(patterns?: string): string[] {
   if (!patterns) return [];
-  return patterns.split(",").map((p) => p.trim()).filter(Boolean);
+  return patterns
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
 }
 
 describe("test function: parsePatterns", () => {
